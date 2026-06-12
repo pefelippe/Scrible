@@ -1,20 +1,57 @@
-# Scribble — AI Clinical Note Management
+# Scribble
 
-A web application for home healthcare clinicians to create, transcribe, and manage AI-enhanced visit notes linked to patient records.
+**AI-powered clinical documentation for home healthcare.**
+
+Scribble helps clinicians capture visit notes faster — type or record audio, then let AI transform raw observations into structured SOAP notes. Every note links to a patient record, and the entire workflow lives in a single web app.
+
+**Live demo:** [scribble-alpha-gules.vercel.app](https://scribble-alpha-gules.vercel.app)
 
 ---
 
 ## Features
 
-- **AI note enhancement** — write or dictate a visit note and get a structured clinical summary using context-aware field labels (Complaint, Vital Signs, Medications, Plan, and more)
-- **Audio transcription** — record directly in the browser or upload a file; transcribed via OpenAI Whisper
-- **Clinical templates** — four pre-filled templates (general visit, wound assessment, medication review, vital signs monitoring) to jumpstart documentation
-- **In-app note viewer** — click any note to view, edit, re-enhance, or delete it in a modal without leaving the current page
-- **Patient management** — create and manage patient records; every note is linked to a patient
-- **Dashboard** — practice-wide stats (total patients, notes today, notes this week) and a feed of recent activity
+### Clinical Documentation
+- **SOAP note generation** — write raw visit notes and enhance them into structured Subjective / Objective / Assessment / Plan sections with one click
+- **Audio transcription** — record directly in the browser or upload an audio file; transcribed via OpenAI Whisper and converted to SOAP
+- **Structured SOAP editor** — four color-coded textareas (one per section) for editing each part independently; toggle between plain text and SOAP view
+- **Clinical templates** — pre-filled wound assessment, medication review, vital signs, and general visit prompts to jumpstart documentation
+- **Undo / redo AI** — every AI enhancement is reversible; step back to the previous version at any time
+
+### Patient Management
+- **Patient records** — create and manage patient profiles with MRN, date of birth, and gender
+- **Patient-linked notes** — every note is associated with one or more patients
+- **Patient detail view** — see all notes for a specific patient in one place
+
+### App Experience
+- **Dashboard** — practice-wide stats (total patients, notes today/this week) and recent activity feed
+- **Note viewer** — click any note to view rendered SOAP sections, edit inline, enhance with AI, or delete
 - **Quick actions** — floating button to create a note or patient from any page
-- **Docker** — fully containerized with Docker Compose; single command to run the full stack locally
-- **CI pipeline** — GitHub Actions runs all integration tests and a production build on every push to `main`
+- **Landing page** — product overview with animated SOAP mock and feature highlights
+- **Demo mode** — one-click login with pre-seeded admin account
+
+---
+
+## Screenshots
+
+| Dashboard | Notes |
+|---|---|
+| ![Dashboard](docs/dashboard.jpg) | ![Notes](docs/notes.jpg) |
+
+| New Note | Audio Recording |
+|---|---|
+| ![New Note](docs/newnotemodal.jpg) | ![Audio Recording](docs/audiomodal.jpg) |
+
+| Enhanced SOAP Note | Patients |
+|---|---|
+| ![Enhanced Note](docs/enhacednotesmodal.jpg) | ![Patients](docs/patients.jpg) |
+
+| Patient Detail | New Patient |
+|---|---|
+| ![Patient Page](docs/patient%20page.jpg) | ![New Patient](docs/newpatientmodal.jpg) |
+
+| Login |
+|---|
+| ![Login](docs/login.jpg) |
 
 ---
 
@@ -22,26 +59,32 @@ A web application for home healthcare clinicians to create, transcribe, and mana
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 18, TypeScript, Vite 5, Tailwind CSS v4, shadcn/ui, React Router v6 |
-| Backend | Node.js 20, TypeScript, Express, Zod |
+| Frontend | React 18, TypeScript, Vite, Tailwind CSS v4, shadcn/ui |
+| Backend | Node.js 20, Express, TypeScript, Zod |
 | Database | PostgreSQL 16, Prisma ORM |
-| AI | OpenAI Whisper (`whisper-1`) for transcription, GPT-4o-mini for note enhancement |
-| Audio storage | Local disk (dev) · AWS S3 / Cloudflare R2 (production) |
-| Auth | JWT · bcryptjs |
-| Testing | Vitest · Supertest (32 server integration tests) |
-| CI | GitHub Actions (tests + lint/build on every push) |
-| Containers | Docker · Docker Compose |
+| AI | OpenAI Whisper (transcription), GPT-4o-mini (SOAP generation) |
+| Auth | JWT, bcryptjs |
+| Testing | Vitest, Supertest |
+| CI | GitHub Actions |
+
+### Deployment
+
+| Service | Platform |
+|---|---|
+| Frontend | [Vercel](https://vercel.com) |
+| API Server | [Railway](https://railway.app) |
+| Database | [Neon](https://neon.tech) (serverless PostgreSQL) |
 
 ---
 
-## Setup
+## Local Development
 
 ### Prerequisites
 
 - Docker and Docker Compose
-- An OpenAI API key with access to `whisper-1` and `gpt-4o-mini`
+- OpenAI API key (`whisper-1` + `gpt-4o-mini`)
 
-### 1. Clone and configure
+### Setup
 
 ```bash
 git clone <repo-url>
@@ -55,64 +98,71 @@ Set your OpenAI key in `.env`:
 OPENAI_API_KEY=sk-...
 ```
 
-### 2. Start (first run)
+### Start
 
-Pass `SEED=on` the first time to populate the database with demo patients and an admin account:
+First run — seed the database with demo patients and admin account:
 
 ```bash
 SEED=on docker compose up -d --build
 ```
 
-Seeding is idempotent. Subsequent runs:
+Subsequent runs:
 
 ```bash
 docker compose up -d
 ```
 
-### 3. Open the app
+### Access
 
 | Service | URL |
 |---|---|
 | Web UI | http://localhost:8080 |
 | API | http://localhost:4000 |
 
-Default credentials:
+Login credentials:
 
 ```
 Email:    admin@scribe.local
 Password: admin123
 ```
 
-### Development (hot-reload)
+### Hot-reload (dev mode)
 
 ```bash
 SEED=on docker compose --profile dev up -d --build
 ```
 
-Starts a Vite dev server at http://localhost:5173 with HMR and API proxy.
+Starts Vite dev server at http://localhost:5173 with HMR and API proxy.
 
 ---
 
-## Optional: S3 Audio Storage
+## Project Structure
 
-Audio files are stored on local disk by default. To use S3:
-
-```env
-S3_BUCKET=my-scribble-audio
-AWS_REGION=us-east-1
-AWS_ACCESS_KEY_ID=...
-AWS_SECRET_ACCESS_KEY=...
+```
+├── server/
+│   ├── prisma/          # Schema, migrations, seed data
+│   ├── src/
+│   │   ├── routes/      # Express route handlers
+│   │   ├── services/    # Business logic (auth, notes, AI)
+│   │   ├── middleware/  # JWT auth, error handling
+│   │   └── storage/     # Audio file storage
+│   └── tests/           # Integration tests
+├── web/
+│   ├── src/
+│   │   ├── auth/        # Login, session management
+│   │   ├── api/         # API client
+│   │   ├── components/  # Shared UI (shadcn/ui, modals)
+│   │   ├── features/    # Dashboard, patients, notes, layout
+│   │   └── pages/       # Landing page
+│   └── public/
+└── docker-compose.yml
 ```
 
-For a local S3-compatible service (e.g. LocalStack), also set `S3_ENDPOINT=http://localhost:4566`.
-
 ---
 
-## Notes & Assumptions
+## Notes
 
-- **Single user** — one hardcoded admin account. No registration or multi-user support.
-- **Synchronous AI** — transcription and enhancement run inline during the request. A production system should use a background job queue.
-- **No audio playback** — audio is stored for transcription only; the UI does not play it back.
-- **Notes are paginated** — 10 per page. The patient list is not paginated (full list loaded sorted by last name — fine at demo scale).
-- **25 MB audio limit** — matches the OpenAI Whisper API constraint.
-- **JWT in localStorage** — sufficient for a demo; production should use `HttpOnly` cookies.
+- **Single user** — one admin account, no registration or multi-user support
+- **Synchronous AI** — transcription and enhancement run inline; production would use a job queue
+- **25 MB audio limit** — matches the OpenAI Whisper API constraint
+- **JWT in localStorage** — sufficient for demo; production should use HttpOnly cookies
