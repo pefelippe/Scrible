@@ -27,7 +27,7 @@ describe('notes', () => {
     token = await createUserWithToken(app);
   });
 
-  it('creates a text note with an AI summary', async () => {
+  it('creates a text note without AI summary', async () => {
     const patient = await createTestPatient();
 
     const response = await request(app)
@@ -40,9 +40,27 @@ describe('notes', () => {
     expect(response.body).toMatchObject({
       sourceType: 'TEXT',
       rawText: 'Patient reports mild dizziness. BP 130/85.',
-      summary: 'S: ...\nO: ...\nA: ...\nP: ...',
+      summary: null,
     });
     expect(response.body.patient.id).toBe(patient.id);
+  });
+
+  it('creates a text note with a pre-generated summary', async () => {
+    const patient = await createTestPatient();
+
+    const response = await request(app)
+      .post('/api/notes')
+      .set('Authorization', `Bearer ${token}`)
+      .field('patientId', patient.id)
+      .field('text', 'Patient reports mild dizziness. BP 130/85.')
+      .field('summary', '**S — Subjective:**\nDizziness reported.');
+
+    expect(response.status).toBe(201);
+    expect(response.body).toMatchObject({
+      sourceType: 'TEXT',
+      rawText: 'Patient reports mild dizziness. BP 130/85.',
+      summary: '**S — Subjective:**\nDizziness reported.',
+    });
   });
 
   it('creates an audio note via transcription', async () => {
