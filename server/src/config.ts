@@ -8,10 +8,6 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(1, 'JWT_SECRET is required'),
   PORT: z.coerce.number().int().positive().default(4000),
   UPLOADS_DIR: z.string().default('uploads'),
-  // S3 audio storage is optional: when S3_BUCKET is unset, audio stays on
-  // local disk. AWS credentials/region resolve via the standard AWS chain.
-  S3_BUCKET: z.string().optional(),
-  S3_ENDPOINT: z.string().optional(), // e.g. LocalStack endpoint
 });
 
 export const config = envSchema.parse(process.env);
