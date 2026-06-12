@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-scribe}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-scribe}
+      POSTGRES_DB: ${POSTGRES_DB:-scribe}
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-scribe} -d ${POSTGRES_DB:-scribe}"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  server:
+    build: ./server
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-scribe}:${POSTGRES_PASSWORD:-scribe}@db:5432/${POSTGRES_DB:-scribe}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      JWT_SECRET: ${JWT_SECRET:-dev-only-secret}
+      SEED: ${SEED:-off}
+      S3_BUCKET: ${S3_BUCKET:-}
+      S3_ENDPOINT: ${S3_ENDPOINT:-}
+      AWS_REGION: ${AWS_REGION:-}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-}
+      PORT: 4000
+      UPLOADS_DIR: /app/uploads
+    ports:
+      - "4000:4000"
+    volumes:
+      - uploads:/app/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./web
+    ports:
+      - "8080:80"
+    depends_on:
+      - server
+
+  web-dev:
+    build:
+      context: ./web
+      dockerfile: Dockerfile.dev
+    profiles: ["dev"]
+    environment:
+      API_PROXY_TARGET: http://server:4000
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./web/src:/app/src
+      - ./web/public:/app/public
+      - ./web/index.html:/app/index.html
+      - ./web/vite.config.ts:/app/vite.config.ts
+    depends_on:
+      - server
+
+volumes:
+  db-data:
+  uploads:

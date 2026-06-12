@@ -1,0 +1,31 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"],
+      "@api": ["./src/api"],
+      "@api/*": ["./src/api/*"],
+      "@auth": ["./src/auth"],
+      "@auth/*": ["./src/auth/*"],
+      "@components": ["./src/components"],
+      "@components/*": ["./src/components/*"],
+      "@features": ["./src/features"],
+      "@features/*": ["./src/features/*"],
+      "@hooks": ["./src/hooks"],
+      "@hooks/*": ["./src/hooks/*"],
+      "@lib": ["./src/lib"],
+      "@lib/*": ["./src/lib/*"]
+    }
+  },
+  "include": ["src"]
+}
