@@ -1,0 +1,49 @@
+// Data model for the AI Scribe tool: seeded patients and their clinical notes.
+generator client {
+  provider      = "prisma-client-js"
+  // native = local dev (macOS); musl = Alpine runtime image
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  name         String
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
+
+model Patient {
+  id        String   @id @default(uuid())
+  mrn       String   @unique // medical record number, used for idempotent seeding
+  firstName String
+  lastName  String
+  dob       DateTime
+  gender    String
+  createdAt DateTime @default(now())
+  notes     Note[]
+}
+
+enum NoteSource {
+  TEXT
+  AUDIO
+}
+
+model Note {
+  id            String     @id @default(uuid())
+  patientId     String
+  patient       Patient    @relation(fields: [patientId], references: [id])
+  sourceType    NoteSource
+  audioFilename String? // original filename of the uploaded audio
+  audioLocation String? // where the audio lives: "local:<key>" or "s3://bucket/key"
+  rawText       String // typed text or Whisper transcript (raw output)
+  summary       String? // AI-generated SOAP-formatted summary; null when saved without AI
+  createdAt     DateTime   @default(now())
+
+  @@index([createdAt])
+}
